@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galactic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0d0d12;
+            height: 100vh;
+            overflow: hidden;
+            color: #ffffff;
+        }
+
+        .browser-window {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #0d0d12;
+        }
+
+        .titlebar {
+            background: #17171f;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #25252f;
+            -webkit-app-region: drag;
+        }
+
+        .titlebar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+            -webkit-app-region: no-drag;
+        }
+
+        .window-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .window-btn:hover {
+            opacity: 0.8;
+        }
+
+        .window-btn.close { background: #ff5f57; }
+        .window-btn.minimize { background: #febc2e; }
+        .window-btn.maximize { background: #28c840; }
+
+        .titlebar-brand {
+            font-size: 13px;
+            font-weight: 600;
+            color: #8b5cf6;
+            letter-spacing: 0.5px;
+        }
+
+        .tabs-bar {
+            background: #17171f;
+            display: flex;
+            align-items: flex-end;
+            padding: 0 8px;
+            gap: 2px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .tabs-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: transparent;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            min-width: 160px;
+            max-width: 220px;
+            transition: background 0.15s;
+            position: relative;
+            user-select: none;
+        }
+
+        .tab.active {
+            background: #1e1e28;
+        }
+
+        .tab:not(.active):hover {
+            background: rgba(139, 92, 246, 0.08);
+        }
+
+        .tab-favicon {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .tab-title {
+            flex: 1;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #9ca3af;
+            font-weight: 400;
+        }
+
+        .tab.active .tab-title {
+            color: #e5e7eb;
+        }
+
+        .tab-close {
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.15s;
+            color: #9ca3af;
+        }
+
+        .tab:hover .tab-close {
+            opacity: 1;
+        }
+
+        .tab-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .new-tab-btn {
+            padding: 8px 10px;
+            background: transparent;
+            border: none;
+            color: #6b7280;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.15s;
+            margin-bottom: 2px;
+        }
+
+        .new-tab-btn:hover {
+            background: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+        }
+
+        .nav-bar {
+            background: #1e1e28;
+            padding: 10px 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-btn {
+            width: 34px;
+            height: 34px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: #9ca3af;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: rgba(139, 92, 246, 0.12);
+            color: #a78bfa;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .url-bar-container {
+            flex: 1;
+            max-width: 700px;
+        }
+
+        .url-bar {
+            display: flex;
+            align-items: center;
+            background: #0d0d12;
+            border: 1px solid #2d2d3d;
+            border-radius: 10px;
+            padding: 0 14px;
+            height: 38px;
+            transition: all 0.2s;
+        }
+
+        .url-bar:focus-within {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .url-icon {
+            color: #8b5cf6;
+            font-size: 13px;
+            margin-right: 10px;
+        }
+
+        .url-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #e5e7eb;
+            font-size: 14px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .url-input::placeholder {
+            color: #6b7280;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            background: #1e1e28;
+        }
+
+        .browser-content {
+            flex: 1;
+            background: #1e1e28;
+            display: none;
+        }
+
+        .browser-content.active {
+            display: block;
+        }
+
+        .home-page {
+            padding: 80px 40px 40px;
+            max-width: 1100px;
+            margin: 0 auto;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .greeting {
+            margin-bottom: 64px;
+        }
+
+        .greeting h1 {
+            font-size: 52px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .greeting-time {
+            font-size: 15px;
+            color: #6b7280;
+            font-weight: 400;
+        }
+
+        .search-section {
+            margin-bottom: 72px;
+        }
+
+        .search-box {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+        }
+
+        .search-input-wrapper input {
+            width: 100%;
+            padding: 18px 24px;
+            font-size: 16px;
+            background: #17171f;
+            border: 1px solid #2d2d3d;
+            border-radius: 14px;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .search-input-wrapper input:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        }
+
+        .search-input-wrapper input::placeholder {
+            color: #6b7280;
+        }
+
+        .quick-links-section h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #9ca3af;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 14px;
+        }
+
+        .quick-link {
+            aspect-ratio: 1;
+            background: #17171f;
+            border: 1px solid #25252f;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: #ffffff;
+            padding: 20px;
+        }
+
+        .quick-link:hover {
+            background: #1f1f29;
+            border-color: #8b5cf6;
+            transform: translateY(-2px);
+        }
+
+        .quick-link-icon {
+            font-size: 28px;
+            margin-bottom: 10px;
+            filter: grayscale(0.2);
+        }
+
+        .quick-link-name {
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            color: #d1d5db;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #fff;
+        }
+
+        @media (max-width: 768px) {
+            .quick-links {
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                gap: 12px;
+            }
+
+            .greeting h1 {
+                font-size: 38px;
+            }
+
+            .home-page {
+                padding: 60px 24px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="browser-window">
+        <div class="titlebar">
+            <div class="titlebar-left">
+                <div class="window-controls">
+                    <div class="window-btn close"></div>
+                    <div class="window-btn minimize"></div>
+                    <div class="window-btn maximize"></div>
+                </div>
+                <div class="titlebar-brand">Galactic</div>
+            </div>
+        </div>
+
+        <div class="tabs-bar" id="tabsBar">
+            <div class="tab active" data-tab-id="0">
+                <svg class="tab-favicon" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="7" fill="#8b5cf6" opacity="0.2"/>
+                    <circle cx="8" cy="8" r="4" fill="#8b5cf6"/>
+                </svg>
+                <span class="tab-title">New Tab</span>
+                <span class="tab-close" onclick="closeTab(0, event)">×</span>
+            </div>
+            <button class="new-tab-btn" onclick="createNewTab()">+</button>
+        </div>
+
+        <div class="nav-bar">
+            <div class="nav-controls">
+                <button class="nav-btn" id="backBtn" onclick="goBack()" disabled>←</button>
+                <button class="nav-btn" id="forwardBtn" onclick="goForward()" disabled>→</button>
+                <button class="nav-btn" onclick="reloadPage()">↻</button>
+                <button class="nav-btn" onclick="goHome()">⌂</button>
+            </div>
+            <div class="url-bar-container">
+                <div class="url-bar">
+                    <span class="url-icon">🔒</span>
+                    <input type="text" class="url-input" id="urlInput" placeholder="Search or enter address">
+                </div>
+            </div>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <div class="browser-content active" id="tab-0">
+                <div class="home-page">
+                    <div class="greeting">
+                        <h1>Galactic</h1>
+                        <p class="greeting-time" id="greetingTime"></p>
+                    </div>
+
+                    <div class="search-section">
+                        <div class="search-box">
+                            <div class="search-input-wrapper">
+                                <input type="text" id="mainSearch" placeholder="Search the web with DuckDuckGo">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quick-links-section">
+                        <h2>Quick Access</h2>
+                        <div class="quick-links">
+                            <div class="quick-link" onclick="navigateToSite('https://youtube.com')">
+                                <div class="quick-link-icon">▶️</div>
+                                <div class="quick-link-name">YouTube</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://discord.com')">
+                                <div class="quick-link-icon">💬</div>
+                                <div class="quick-link-name">Discord</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://reddit.com')">
+                                <div class="quick-link-icon">🔴</div>
+                                <div class="quick-link-name">Reddit</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://twitter.com')">
+                                <div class="quick-link-icon">🐦</div>
+                                <div class="quick-link-name">Twitter</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://twitch.tv')">
+                                <div class="quick-link-icon">📺</div>
+                                <div class="quick-link-name">Twitch</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://spotify.com')">
+                                <div class="quick-link-icon">🎵</div>
+                                <div class="quick-link-name">Spotify</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://github.com')">
+                                <div class="quick-link-icon">💻</div>
+                                <div class="quick-link-name">GitHub</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://netflix.com')">
+                                <div class="quick-link-icon">🎬</div>
+                                <div class="quick-link-name">Netflix</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://instagram.com')">
+                                <div class="quick-link-icon">📷</div>
+                                <div class="quick-link-name">Instagram</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://tiktok.com')">
+                                <div class="quick-link-icon">🎵</div>
+                                <div class="quick-link-name">TikTok</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://amazon.com')">
+                                <div class="quick-link-icon">📦</div>
+                                <div class="quick-link-name">Amazon</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://gmail.com')">
+                                <div class="quick-link-icon">✉️</div>
+                                <div class="quick-link-name">Gmail</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/uv/uv.bundle.js"></script>
+    <script src="/uv/uv.config.js"></script>
+    <script src="/baremux/index.js"></script>
+
+    <script>
+        let tabCount = 1;
+        let activeTabId = 0;
+        let tabs = {
+            0: { url: '', title: 'New Tab', history: [], historyIndex: -1 }
+        };
+
+        function updateGreeting() {
+            const hour = new Date().getHours();
+            let greeting = 'Good evening';
+            if (hour < 12) greeting = 'Good morning';
+            else if (hour < 18) greeting = 'Good afternoon';
+            
+            const timeEl = document.getElementById('greetingTime');
+            if (timeEl) {
+                timeEl.textContent = greeting;
+            }
+        }
+
+        updateGreeting();
+
+        function isURL(str) {
+            const pattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+            return pattern.test(str) || str.includes('.');
+        }
+
+        function getProxyURL(url) {
+            let finalURL = url;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                finalURL = 'https://' + url;
+            }
+            return '/service/' + encodeURIComponent(finalURL);
+        }
+
+        function navigate(query = null) {
+            const input = query || document.getElementById('urlInput').value.trim();
+            
+            if (!input) return;
+
+            let targetURL;
+            if (isURL(input)) {
+                targetURL = getProxyURL(input);
+            } else {
+                targetURL = getProxyURL('https://duckduckgo.com/?q=' + encodeURIComponent(input));
+            }
+
+            loadURLInTab(activeTabId, targetURL, input);
+        }
+
+        function navigateToSite(url) {
+            const proxyURL = getProxyURL(url);
+            loadURLInTab(activeTabId, proxyURL, url);
+        }
+
+        function loadURLInTab(tabId, proxyURL, originalURL) {
+            const tabContent = document.getElementById('tab-' + tabId);
+            tabContent.innerHTML = '<iframe src="' + proxyURL + '"></iframe>';
+            
+            tabs[tabId].url = originalURL;
+            
+            const domain = originalURL.replace(/^https?:\/\/(www\.)?/, '').split('/')[0].split('?')[0];
+            tabs[tabId].title = domain;
+            
+            if (tabs[tabId].historyIndex < tabs[tabId].history.length - 1) {
+                tabs[tabId].history = tabs[tabId].history.slice(0, tabs[tabId].historyIndex + 1);
+            }
+            tabs[tabId].history.push(originalURL);
+            tabs[tabId].historyIndex = tabs[tabId].history.length - 1;
+            
+            updateTabTitle(tabId, domain);
+            updateNavigationButtons();
+            
+            document.getElementById('urlInput').value = originalURL;
+        }
+
+        function createNewTab() {
+            const newTabId = tabCount++;
+            
+            tabs[newTabId] = { url: '', title: 'New Tab', history: [], historyIndex: -1 };
+
+            const tabsBar = document.getElementById('tabsBar');
+            const newTabBtn = tabsBar.querySelector('.new-tab-btn');
+            
+            const tab = document.createElement('div');
+            tab.className = 'tab';
+            tab.setAttribute('data-tab-id', newTabId);
+            tab.innerHTML = `
+                <svg class="tab-favicon" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="7" fill="#8b5cf6" opacity="0.2"/>
+                    <circle cx="8" cy="8" r="4" fill="#8b5cf6"/>
+                </svg>
+                <span class="tab-title">New Tab</span>
+                <span class="tab-close" onclick="closeTab(${newTabId}, event)">×</span>
+            `;
+            tab.onclick = function(e) {
+                if (!e.target.classList.contains('tab-close')) {
+                    switchTab(newTabId);
+                }
+            };
+            
+            tabsBar.insertBefore(tab, newTabBtn);
+
+            const contentArea = document.getElementById('contentArea');
+            const newContent = document.createElement('div');
+            newContent.className = 'browser-content';
+            newContent.id = 'tab-' + newTabId;
+            newContent.innerHTML = document.getElementById('tab-0').innerHTML;
+            contentArea.appendChild(newContent);
+
+            switchTab(newTabId);
+            
+            setTimeout(() => {
+                const searchInput = newContent.querySelector('#mainSearch');
+                if (searchInput) {
+                    searchInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            navigate(this.value);
+                        }
+                    });
+                }
+            }, 0);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.browser-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[data-tab-id="${tabId}"]`).classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            activeTabId = tabId;
+            document.getElementById('urlInput').value = tabs[tabId].url;
+            updateNavigationButtons();
+        }
+
+        function closeTab(tabId, event) {
+            event.stopPropagation();
+            
+            const tabElements = document.querySelectorAll('.tab');
+            if (tabElements.length <= 1) return;
+
+            document.querySelector(`[data-tab-id="${tabId}"]`).remove();
+            document.getElementById('tab-' + tabId).remove();
+            delete tabs[tabId];
+
+            if (activeTabId === tabId) {
+                const remainingTabs = Object.keys(tabs);
+                switchTab(parseInt(remainingTabs[0]));
+            }
+        }
+
+        function updateTabTitle(tabId, title) {
+            const tab = document.querySelector(`[data-tab-id="${tabId}"]`);
+            const titleElement = tab.querySelector('.tab-title');
+            const shortTitle = title.length > 20 ? title.substring(0, 20) + '...' : title;
+            titleElement.textContent = shortTitle;
+        }
+
+        function goBack() {
+            if (tabs[activeTabId].historyIndex > 0) {
+                tabs[activeTabId].historyIndex--;
+                const url = tabs[activeTabId].history[tabs[activeTabId].historyIndex];
+                const tabContent = document.getElementById('tab-' + activeTabId);
+                tabContent.innerHTML = '<iframe src="' + getProxyURL(url) + '"></iframe>';
+                tabs[activeTabId].url = url;
+                document.getElementById('urlInput').value = url;
+                updateNavigationButtons();
+            }
+        }
+
+        function goForward() {
+            if (tabs[activeTabId].historyIndex < tabs[activeTabId].history.length - 1) {
+                tabs[activeTabId].historyIndex++;
+                const url = tabs[activeTabId].history[tabs[activeTabId].historyIndex];
+                const tabContent = document.getElementById('tab-' + activeTabId);
+                tabContent.innerHTML = '<iframe src="' + getProxyURL(url) + '"></iframe>';
+                tabs[activeTabId].url = url;
+                document.getElementById('urlInput').value = url;
+                updateNavigationButtons();
+            }
+        }
+
+        function reloadPage() {
+            const currentURL = tabs[activeTabId].url;
+            if (currentURL) {
+                const tabContent = document.getElementById('tab-' + activeTabId);
+                tabContent.innerHTML = '<iframe src="' + getProxyURL(currentURL) + '"></iframe>';
+            }
+        }
+
+        function goHome() {
+            const tabContent = document.getElementById('tab-' + activeTabId);
+            const homeHTML = document.getElementById('tab-0').querySelector('.home-page').outerHTML;
+            tabContent.innerHTML = '<div class="home-page">' + homeHTML + '</div>';
+            tabs[activeTabId].url = '';
+            tabs[activeTabId].title = 'New Tab';
+            document.getElementById('urlInput').value = '';
+            updateTabTitle(activeTabId, 'New Tab');
+            updateNavigationButtons();
+            
+            const searchInput = tabContent.querySelector('#mainSearch');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        navigate(this.value);
+                    }
+                });
+            }
+        }
+
+        function updateNavigationButtons() {
+            const backBtn = document.getElementById('backBtn');
+            const forwardBtn = document.getElementById('forwardBtn');
+            
+            backBtn.disabled = tabs[activeTabId].historyIndex <= 0;
+            forwardBtn.disabled = tabs[activeTabId].historyIndex >= tabs[activeTabId].history.length - 1;
+        }
+
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                navigate();
+            }
+        });
+
+        document.getElementById('mainSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                navigate(this.value);
+            }
+        });
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                if (!e.target.classList.contains('tab-close')) {
+                    const tabId = parseInt(this.getAttribute('data-tab-id'));
+                    switchTab(tabId);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+    <div class="browser-window">
+        <div class="titlebar">
+            <div class="titlebar-left">
+                <div class="window-controls">
+                    <div class="window-btn close"></div>
+                    <div class="window-btn minimize"></div>
+                    <div class="window-btn maximize"></div>
+                </div>
+                <div class="titlebar-brand">GALACTIC</div>
+            </div>
+        </div>
+
+        <div class="tabs-bar" id="tabsBar">
+            <div class="tab active" data-tab-id="0">
+                <span class="tab-title">New Tab</span>
+                <span class="tab-close" onclick="closeTab(0, event)">×</span>
+            </div>
+            <button class="new-tab-btn" onclick="createNewTab()">+</button>
+        </div>
+
+        <div class="nav-bar">
+            <div class="nav-controls">
+                <button class="nav-btn" id="backBtn" onclick="goBack()" disabled>←</button>
+                <button class="nav-btn" id="forwardBtn" onclick="goForward()" disabled>→</button>
+                <button class="nav-btn" onclick="reloadPage()">⟳</button>
+                <button class="nav-btn" onclick="goHome()">⌂</button>
+            </div>
+            <div class="url-bar">
+                <span class="url-icon">🔒</span>
+                <input type="text" class="url-input" id="urlInput" placeholder="Search DuckDuckGo or enter URL...">
+            </div>
+            <button class="go-btn" onclick="navigate()">Go</button>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <div class="browser-content active" id="tab-0">
+                <div class="home-page">
+                    <div class="home-header">
+                        <h1>Galactic</h1>
+                        <p>Your gateway to the web</p>
+                    </div>
+
+                    <div class="quick-links-section">
+                        <h2>Quick Access</h2>
+                        <div class="quick-links">
+                            <div class="quick-link" onclick="navigateToSite('https://youtube.com')">
+                                <div class="quick-link-icon">▶</div>
+                                <div class="quick-link-name">YouTube</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://discord.com')">
+                                <div class="quick-link-icon">💬</div>
+                                <div class="quick-link-name">Discord</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://reddit.com')">
+                                <div class="quick-link-icon">📱</div>
+                                <div class="quick-link-name">Reddit</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://twitter.com')">
+                                <div class="quick-link-icon">🐦</div>
+                                <div class="quick-link-name">Twitter</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://twitch.tv')">
+                                <div class="quick-link-icon">📺</div>
+                                <div class="quick-link-name">Twitch</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://spotify.com')">
+                                <div class="quick-link-icon">🎵</div>
+                                <div class="quick-link-name">Spotify</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://github.com')">
+                                <div class="quick-link-icon">💻</div>
+                                <div class="quick-link-name">GitHub</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://netflix.com')">
+                                <div class="quick-link-icon">🎬</div>
+                                <div class="quick-link-name">Netflix</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://instagram.com')">
+                                <div class="quick-link-icon">📷</div>
+                                <div class="quick-link-name">Instagram</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://tiktok.com')">
+                                <div class="quick-link-icon">🎶</div>
+                                <div class="quick-link-name">TikTok</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://amazon.com')">
+                                <div class="quick-link-icon">🛒</div>
+                                <div class="quick-link-name">Amazon</div>
+                            </div>
+                            <div class="quick-link" onclick="navigateToSite('https://wikipedia.org')">
+                                <div class="quick-link-icon">📚</div>
+                                <div class="quick-link-name">Wikipedia</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/uv/uv.bundle.js"></script>
+    <script src="/uv/uv.config.js"></script>
+    <script src="/baremux/index.js"></script>
+
+    <script>
+        let tabCount = 1;
+        let activeTabId = 0;
+        let tabs = {
+            0: { url: '', title: 'New Tab', history: [], historyIndex: -1 }
+        };
+
+        function isURL(str) {
+            const pattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+            return pattern.test(str) || str.includes('.');
+        }
+
+        function getProxyURL(url) {
+            let finalURL = url;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                finalURL = 'https://' + url;
+            }
+            return '/service/' + encodeURIComponent(finalURL);
+        }
+
+        function navigate() {
+            const input = document.getElementById('urlInput');
+            const query = input.value.trim();
+            
+            if (!query) return;
+
+            let targetURL;
+            if (isURL(query)) {
+                targetURL = getProxyURL(query);
+            } else {
+                targetURL = getProxyURL('https://duckduckgo.com/?q=' + encodeURIComponent(query));
+            }
+
+            loadURLInTab(activeTabId, targetURL, query);
+        }
+
+        function navigateToSite(url) {
+            const proxyURL = getProxyURL(url);
+            loadURLInTab(activeTabId, proxyURL, url);
+        }
+
+        function loadURLInTab(tabId, proxyURL, originalURL) {
+            const tabContent = document.getElementById('tab-' + tabId);
+            tabContent.innerHTML = '<iframe src="' + proxyURL + '"></iframe>';
+            
+            tabs[tabId].url = originalURL;
+            tabs[tabId].title = originalURL;
+            tabs[tabId].history.push(originalURL);
+            tabs[tabId].historyIndex = tabs[tabId].history.length - 1;
+            
+            updateTabTitle(tabId, originalURL);
+            updateNavigationButtons();
+        }
+
+        function createNewTab() {
+            const newTabId = tabCount++;
+            
+            tabs[newTabId] = { url: '', title: 'New Tab', history: [], historyIndex: -1 };
+
+            const tabsBar = document.getElementById('tabsBar');
+            const newTabBtn = tabsBar.querySelector('.new-tab-btn');
+            
+            const tab = document.createElement('div');
+            tab.className = 'tab';
+            tab.setAttribute('data-tab-id', newTabId);
+            tab.innerHTML = `
+                <span class="tab-title">New Tab</span>
+                <span class="tab-close" onclick="closeTab(${newTabId}, event)">×</span>
+            `;
+            tab.onclick = function(e) {
+                if (!e.target.classList.contains('tab-close')) {
+                    switchTab(newTabId);
+                }
+            };
+            
+            tabsBar.insertBefore(tab, newTabBtn);
+
+            const contentArea = document.getElementById('contentArea');
+            const newContent = document.createElement('div');
+            newContent.className = 'browser-content';
+            newContent.id = 'tab-' + newTabId;
+            newContent.innerHTML = document.getElementById('tab-0').innerHTML;
+            contentArea.appendChild(newContent);
+
+            switchTab(newTabId);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.browser-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[data-tab-id="${tabId}"]`).classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            activeTabId = tabId;
+            document.getElementById('urlInput').value = tabs[tabId].url;
+            updateNavigationButtons();
+        }
+
+        function closeTab(tabId, event) {
+            event.stopPropagation();
+            
+            const tabElements = document.querySelectorAll('.tab');
+            if (tabElements.length <= 1) return;
+
+            document.querySelector(`[data-tab-id="${tabId}"]`).remove();
+            document.getElementById('tab-' + tabId).remove();
+            delete tabs[tabId];
+
+            if (activeTabId === tabId) {
+                const remainingTabs = Object.keys(tabs);
+                switchTab(parseInt(remainingTabs[0]));
+            }
+        }
+
+        function updateTabTitle(tabId, title) {
+            const tab = document.querySelector(`[data-tab-id="${tabId}"]`);
+            const titleElement = tab.querySelector('.tab-title');
+            const shortTitle = title.length > 25 ? title.substring(0, 25) + '...' : title;
+            titleElement.textContent = shortTitle;
+        }
+
+        function goBack() {
+            if (tabs[activeTabId].historyIndex > 0) {
+                tabs[activeTabId].historyIndex--;
+                const url = tabs[activeTabId].history[tabs[activeTabId].historyIndex];
+                loadURLInTab(activeTabId, getProxyURL(url), url);
+            }
+        }
+
+        function goForward() {
+            if (tabs[activeTabId].historyIndex < tabs[activeTabId].history.length - 1) {
+                tabs[activeTabId].historyIndex++;
+                const url = tabs[activeTabId].history[tabs[activeTabId].historyIndex];
+                loadURLInTab(activeTabId, getProxyURL(url), url);
+            }
+        }
+
+        function reloadPage() {
+            const currentURL = tabs[activeTabId].url;
+            if (currentURL) {
+                loadURLInTab(activeTabId, getProxyURL(currentURL), currentURL);
+            }
+        }
+
+        function goHome() {
+            const tabContent = document.getElementById('tab-' + activeTabId);
+            tabContent.innerHTML = document.getElementById('tab-0').innerHTML;
+            tabs[activeTabId].url = '';
+            tabs[activeTabId].title = 'New Tab';
+            document.getElementById('urlInput').value = '';
+            updateTabTitle(activeTabId, 'New Tab');
+            updateNavigationButtons();
+        }
+
+        function updateNavigationButtons() {
+            const backBtn = document.getElementById('backBtn');
+            const forwardBtn = document.getElementById('forwardBtn');
+            
+            backBtn.disabled = tabs[activeTabId].historyIndex <= 0;
+            forwardBtn.disabled = tabs[activeTabId].historyIndex >= tabs[activeTabId].history.length - 1;
+        }
+
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                navigate();
+            }
+        });
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                if (!e.target.classList.contains('tab-close')) {
+                    const tabId = parseInt(this.getAttribute('data-tab-id'));
+                    switchTab(tabId);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
