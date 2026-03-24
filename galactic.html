@@ -569,7 +569,7 @@
             if (isURL(input)) {
                 targetURL = getProxyURL(input);
             } else {
-                targetURL = getProxyURL('https://duckduckgo.com/?q=' + encodeURIComponent(input));
+                targetURL = getProxyURL('https://search.brave.com/search?q=' + encodeURIComponent(input));
             }
 
             loadURLInTab(activeTabId, targetURL, input);
