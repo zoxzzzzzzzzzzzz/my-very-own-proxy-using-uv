@@ -8,3 +8,8 @@ first you wanna get my template then you want to change the name and stuff (make
 a proxy that uses baremux, libcurl, and uv
 
 # pls star and yeah bye!
+
+# quick note yes this is made by claude
+(im not a skid lmao)
+
+# just im not coding 1000 lines for a small project lol
