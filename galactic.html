@@ -627,7 +627,7 @@ function normalize(input) {
 input = input.trim()
 if (!input.includes(".") && !input.startsWith("localhost")) {
 
-return "https://duckduckgo.com/?q=search" + encodeURIComponent(input)
+return "https://duckduckgo.com/?q=%s" + encodeURIComponent(input)
 }
 if (!input.startsWith("http")) return "https://" + input
 return input
