@@ -13,3 +13,5 @@ a proxy that uses baremux, libcurl, and uv
 (im not a skid lmao)
 
 # just im not coding 1000 lines for a small project lol
+
+# open source (idrc)
