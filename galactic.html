@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Galactic Browser</title>
+
+
+<script src="/uv/uv.bundle.js"></script>
+<script src="/uv/uv.config.js"></script>
+<script src="/baremux/index.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+
+<style>
+* {
+box-sizing: border-box;
+font-family: Inter, system-ui;
+-webkit-font-smoothing: antialiased;
+
+}
+
+html, body {
+margin: 0;
+width: 100%;
+height: 100%;
+background: #0a0015;
+overflow: hidden;
+}
+
+
+body::before {
+content: '';
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background:
+radial-gradient(ellipse at top left, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
+radial-gradient(ellipse at top right, rgba(75, 0, 130, 0.1) 0%, transparent 50%),
+radial-gradient(ellipse at bottom, rgba(147, 51, 234, 0.1) 0%, transparent 50%);
+animation: gradientShift 15s ease infinite;
+z-index: 0;
+}
+
+@keyframes gradientShift {
+0%, 100% { opacity: 1; }
+50% { opacity: 0.8; }
+
+}
+
+
+.browser-ui {
+position: relative;
+height: 110px;
+background: rgba(15, 5, 30, 0.85);
+backdrop-filter: blur(30px) saturate(180%);
+display: flex;
+flex-direction: column;
+border-bottom: 1px solid rgba(138, 43, 226, 0.2);
+box-shadow: 0 8px 32px rgba(138, 43, 226, 0.1);
+
+z-index: 10;
+}
+
+
+.tabs {
+height: 48px;
+display: flex;
+align-items: center;
+padding: 8px 16px;
+gap: 6px;
+overflow-x: auto;
+scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+display: none;
+}
+
+.tab {
+position: relative;
+height: 36px;
+min-width: 200px;
+max-width: 260px;
+padding: 0 16px;
+border-radius: 12px 12px 0 0;
+background: rgba(30, 15, 60, 0.3);
+color: #b8a4d8;
+
+display: flex;
+align-items: center;
+gap: 10px;
+cursor: pointer;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+border: 1px solid rgba(138, 43, 226, 0.15);
+border-bottom: none;
+font-size: 13px;
+font-weight: 500;
+overflow: hidden;
+}
+
+.tab::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+height: 2px;
+background: linear-gradient(90deg, transparent, rgba(138, 43, 226, 0.5), transparent);
+opacity: 0;
+transition: opacity 0.3s ease;
+}
+
+.tab:hover {
+background: rgba(50, 25, 100, 0.4);
+color: #e0d4f7;
+border-color: rgba(138, 43, 226, 0.3);
+}
+
+.tab.active {
+background: linear-gradient(180deg, rgba(138, 43, 226, 0.2) 0%, rgba(75, 0, 130, 0.25) 100%);
+color: white;
+border-color: rgba(186, 85, 211, 0.4);
+box-shadow:
+0 -4px 12px rgba(138, 43, 226, 0.2),
+inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.tab.active::before {
+opacity: 1;
+
+}
+
+.tab span {
+flex: 1;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
+
+.tab i {
+opacity: .4;
+font-size: 13px;
+transition: all 0.2s ease;
+padding: 4px;
+
+}
+
+.tab i:hover {
+opacity: 1;
+color: #ff6b9d;
+transform: rotate(90deg);
+}
+
+.newtab {
+width: 38px;
+height: 38px;
+border-radius: 10px;
+border: 1px solid rgba(138, 43, 226, 0.25);
+background: rgba(138, 43, 226, 0.08);
+color: #ba55d3;
+cursor: pointer;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+font-size: 16px;
+}
+
+.newtab:hover {
+background: rgba(138, 43, 226, 0.2);
+color: #da70d6;
+border-color: rgba(138, 43, 226, 0.4);
+transform: scale(1.08);
+}
+
+.newtab:active {
+transform: scale(0.95);
+
+}
+
+
+.navbar {
+height: 62px;
+
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 0 20px;
+}
+
+.nav-controls {
+display: flex;
+gap: 6px;
+}
+
+.navbar button {
+width: 40px;
+height: 40px;
+border-radius: 10px;
+border: 1px solid rgba(138, 43, 226, 0.2);
+background: rgba(138, 43, 226, 0.08);
+color: #ba55d3;
+cursor: pointer;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+font-size: 15px;
+}
+
+.navbar button:hover:not(:disabled) {
+background: rgba(138, 43, 226, 0.2);
+color: #e0d4f7;
+border-color: rgba(138, 43, 226, 0.4);
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(138, 43, 226, 0.2);
+}
+
+.navbar button:active:not(:disabled) {
+transform: translateY(0);
+}
+
+.navbar button:disabled {
+opacity: 0.3;
+cursor: not-allowed;
+
+}
+
+
+.urlbar {
+flex: 1;
+height: 44px;
+background: rgba(20, 10, 40, 0.5);
+border-radius: 12px;
+padding: 0 18px;
+display: flex;
+align-items: center;
+gap: 12px;
+border: 1.5px solid rgba(138, 43, 226, 0.25);
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+margin: 0 12px;
+}
+
+.urlbar:focus-within {
+background: rgba(30, 15, 60, 0.6);
+border-color: rgba(186, 85, 211, 0.6);
+box-shadow:
+inset 0 2px 8px rgba(0, 0, 0, 0.2),
+0 0 0 3px rgba(138, 43, 226, 0.15),
+0 8px 24px rgba(138, 43, 226, 0.2);
+}
+
+.urlbar i {
+color: #ba55d3;
+font-size: 14px;
+
+}
+
+.urlbar input {
+width: 100%;
+height: 100%;
+background: transparent;
+border: none;
+outline: none;
+color: white;
+font-size: 14px;
+font-weight: 500;
+}
+
+.urlbar input::placeholder {
+color: rgba(184, 164, 216, 0.4);
+
+}
+
+
+.viewframe {
+position: absolute;
+top: 110px;
+left: 0;
+width: 100%;
+height: calc(100% - 110px);
+border: none;
+display: none;
+background: #0a0015;
+
+}
+
+.viewframe.active {
+display: block;
+}
+
+
+.ntp {
+position: absolute;
+top: 110px;
+left: 0;
+width: 100%;
+height: calc(100% - 110px);
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+pointer-events: none;
+overflow-y: auto;
+padding: 40px 20px;
+}
+
+.ntp-content {
+position: relative;
+z-index: 1;
+text-align: center;
+max-width: 1200px;
+pointer-events: auto;
+}
+
+.ntp h1 {
+font-size: 84px;
+font-weight: 800;
+margin: 0;
+background: linear-gradient(135deg, #e879f9 0%, #a78bfa 30%, #c084fc 60%, #e879f9 100%);
+background-size: 200% auto;
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+filter: drop-shadow(0 0 40px rgba(168, 85, 247, 0.4));
+letter-spacing: -3px;
+animation: shimmer 8s linear infinite;
+}
+
+@keyframes shimmer {
+0% { background-position: 0% center; }
+100% { background-position: 200% center; }
+}
+
+.ntp-subtitle {
+font-size: 18px;
+color: #b8a4d8;
+margin-top: 12px;
+font-weight: 500;
+opacity: 0.9;
+}
+
+
+.quick-links {
+margin-top: 60px;
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+gap: 16px;
+max-width: 900px;
+width: 100%;
+}
+
+.quick-link {
+background: rgba(30, 15, 60, 0.4);
+border: 1px solid rgba(138, 43, 226, 0.25);
+border-radius: 16px;
+padding: 24px 20px;
+cursor: pointer;
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+text-decoration: none;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 12px;
+backdrop-filter: blur(10px);
+position: relative;
+overflow: hidden;
+}
+
+.quick-link::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, transparent 100%);
+opacity: 0;
+transition: opacity 0.3s ease;
+}
+
+.quick-link:hover {
+background: rgba(50, 25, 100, 0.5);
+border-color: rgba(186, 85, 211, 0.5);
+transform: translateY(-4px);
+box-shadow:
+0 12px 32px rgba(138, 43, 226, 0.3),
+inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.quick-link:hover::before {
+opacity: 1;
+}
+
+.quick-link:active {
+transform: translateY(-2px);
+}
+
+.quick-link-icon {
+width: 48px;
+height: 48px;
+background: linear-gradient(135deg, rgba(138, 43, 226, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
+border-radius: 12px;
+
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 24px;
+color: #ba55d3;
+position: relative;
+z-index: 1;
+}
+
+.quick-link-name {
+color: #e0d4f7;
+font-size: 14px;
+font-weight: 600;
+position: relative;
+z-index: 1;
+}
+
+
+.stars {
+position: absolute;
+width: 100%;
+height: 100%;
+top: 0;
+left: 0;
+}
+
+.star {
+position: absolute;
+background: white;
+border-radius: 50%;
+animation: twinkle 3s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+0%, 100% { opacity: 0.3; transform: scale(1); }
+50% { opacity: 1; transform: scale(1.2); }
+}
+
+
+@media (max-width: 768px) {
+.ntp h1 {
+font-size: 48px;
+}
+.quick-links {
+grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+gap: 12px;
+
+}
+}
+</style>
+</head>
+
+<body>
+
+<div class="browser-ui">
+<div class="tabs" id="tabs">
+<button class="newtab" id="newtab"><i class="fas fa-plus"></i></button>
+</div>
+
+<div class="navbar">
+<div class="nav-controls">
+<button id="back" title="Go back"><i class="fas fa-arrow-left"></i></button>
+<button id="forward" title="Go forward"><i class="fas fa-arrow-right"></i></button>
+<button id="reload" title="Reload page"><i class="fas fa-rotate-right"></i></button>
+</div>
+
+
+<form class="urlbar" id="form">
+<i class="fas fa-magnifying-glass"></i>
+<input id="url" placeholder="Search the galaxy or enter address" autocomplete="off">
+</form>
+
+<button id="popout" title="Open in new window"><i class="fas fa-up-right-from-square"></i></button>
+
+</div>
+</div>
+
+<div class="ntp" id="ntp">
+<div class="stars" id="stars"></div>
+<div class="ntp-content">
+<h1>Galactic Browser</h1>
+<p class="ntp-subtitle">Explore the infinite web</p>
+<div class="quick-links">
+<a href="#" class="quick-link" data-url="https://www.youtube.com">
+<div class="quick-link-icon"><i class="fab fa-youtube"></i></div>
+<div class="quick-link-name">YouTube</div>
+</a>
+<a href="#" class="quick-link" data-url="https://www.google.com">
+<div class="quick-link-icon"><i class="fab fa-google"></i></div>
+<div class="quick-link-name">Google</div>
+</a>
+<a href="#" class="quick-link" data-url="https://discord.com">
+<div class="quick-link-icon"><i class="fab fa-discord"></i></div>
+<div class="quick-link-name">Discord</div>
+</a>
+<a href="#" class="quick-link" data-url="https://reddit.com">
+<div class="quick-link-icon"><i class="fab fa-reddit"></i></div>
+<div class="quick-link-name">Reddit</div>
+</a>
+<a href="#" class="quick-link" data-url="https://twitter.com">
+<div class="quick-link-icon"><i class="fab fa-twitter"></i></div>
+<div class="quick-link-name">Twitter</div>
+</a>
+<a href="#" class="quick-link" data-url="https://github.com">
+<div class="quick-link-icon"><i class="fab fa-github"></i></div>
+<div class="quick-link-name">GitHub</div>
+</a>
+<a href="#" class="quick-link" data-url="https://twitch.tv">
+<div class="quick-link-icon"><i class="fab fa-twitch"></i></div>
+<div class="quick-link-name">Twitch</div>
+</a>
+<a href="#" class="quick-link" data-url="https://spotify.com">
+<div class="quick-link-icon"><i class="fab fa-spotify"></i></div>
+<div class="quick-link-name">Spotify</div>
+</a>
+</div>
+</div>
+</div>
+
+<script>
+
+const starsContainer = document.getElementById('stars');
+for (let i = 0; i < 50; i++) {
+const star = document.createElement('div');
+star.className = 'star';
+star.style.width = Math.random() * 3 + 'px';
+star.style.height = star.style.width;
+star.style.left = Math.random() * 100 + '%';
+star.style.top = Math.random() * 100 + '%';
+star.style.animationDelay = Math.random() * 3 + 's';
+star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+starsContainer.appendChild(star);
+
+}
+
+navigator.serviceWorker?.register("/uv/sw.js")
+
+const connection = new BareMux.BareMuxConnection("/baremux/worker.js")
+connection.setTransport("/libcurl/index.mjs", [{ websocket: "wss://wisp.rhw.one/" }])
+
+const tabsEl = document.getElementById("tabs")
+const newTabBtn = document.getElementById("newtab")
+const urlInput = document.getElementById("url")
+const ntp = document.getElementById("ntp")
+const backBtn = document.getElementById("back")
+const forwardBtn = document.getElementById("forward")
+
+
+let tabs = []
+let activeId = null
+let idCounter = 0
+
+function createTab(url = "") {
+const id = idCounter++
+
+const iframe = document.createElement("iframe")
+iframe.className = "viewframe"
+iframe.dataset.id = id
+
+iframe.setAttribute("sandbox",
+"allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox"
+
+)
+
+document.body.appendChild(iframe)
+
+const tabBtn = document.createElement("div")
+tabBtn.className = "tab"
+tabBtn.dataset.id = id
+tabBtn.innerHTML = `<span>New Tab</span><i class="fas fa-xmark"></i>`
+
+tabBtn.addEventListener("click", e => {
+if (e.target.tagName === "I") closeTab(id)
+else activateTab(id)
+})
+
+tabsEl.insertBefore(tabBtn, newTabBtn)
+
+tabs.push({ id, iframe, tabBtn, history: [], index: -1 })
+activateTab(id)
+
+if (url) navigate(url)
+}
+
+function activateTab(id) {
+activeId = id
+
+tabs.forEach(t => {
+t.iframe.classList.toggle("active", t.id === id)
+t.tabBtn.classList.toggle("active", t.id === id)
+})
+
+const tab = getTab()
+if (!tab) return
+
+updateNavButtons()
+
+
+if (tab.index >= 0) {
+urlInput.value = tab.history[tab.index]
+ntp.style.display = "none"
+} else {
+urlInput.value = ""
+ntp.style.display = "flex"
+}
+}
+
+function closeTab(id) {
+if (tabs.length === 1) return
+
+const i = tabs.findIndex(t => t.id === id)
+const tab = tabs[i]
+
+tab.iframe.remove()
+tab.tabBtn.remove()
+tabs.splice(i, 1)
+
+activateTab(tabs[Math.max(0, i - 1)].id)
+}
+
+function normalize(input) {
+input = input.trim()
+if (!input.includes(".") && !input.startsWith("localhost")) {
+
+return "https://duckduckgo.com/?q=search" + encodeURIComponent(input)
+}
+if (!input.startsWith("http")) return "https://" + input
+return input
+}
+
+function navigate(input, push = true) {
+const tab = getTab()
+if (!tab) return
+
+const url = normalize(input)
+
+if (push) {
+tab.history = tab.history.slice(0, tab.index + 1)
+tab.history.push(url)
+tab.index++
+}
+
+tab.iframe.src = __uv$config.prefix + __uv$config.encodeUrl(url)
+urlInput.value = url
+ntp.style.display = "none"
+updateNavButtons()
+
+tab.iframe.onload = () => {
+try {
+const title = tab.iframe.contentDocument?.title
+if (title) {
+tab.tabBtn.querySelector("span").textContent = title
+} else {
+tab.tabBtn.querySelector("span").textContent = new URL(url).hostname
+}
+} catch (e) {
+tab.tabBtn.querySelector("span").textContent = new URL(url).hostname
+
+}
+}
+}
+
+function getTab() {
+return tabs.find(t => t.id === activeId)
+}
+
+function updateNavButtons() {
+
+const t = getTab()
+if (!t) return
+backBtn.disabled = !t || t.index <= 0
+forwardBtn.disabled = !t || t.index >= t.history.length - 1
+
+}
+
+
+back.onclick = () => {
+const t = getTab()
+if (!t || t.index <= 0) return
+t.index--
+navigate(t.history[t.index], false)
+}
+
+forward.onclick = () => {
+const t = getTab()
+if (!t || t.index >= t.history.length - 1) return
+t.index++
+navigate(t.history[t.index], false)
+}
+
+reload.onclick = () => {
+const t = getTab()
+if (!t || t.index < 0) return
+
+t.iframe.src = t.iframe.src
+}
+
+popout.onclick = () => {
+const t = getTab()
+if (!t || t.index < 0) return
+const originalUrl = t.history[t.index]
+window.open(originalUrl, "_blank")
+
+}
+
+form.onsubmit = e => {
+e.preventDefault()
+if (urlInput.value.trim()) navigate(urlInput.value)
+}
+
+newTabBtn.onclick = () => createTab()
+
+
+document.querySelectorAll('.quick-link').forEach(link => {
+link.addEventListener('click', e => {
+e.preventDefault()
+const url = link.dataset.url
+navigate(url)
+})
+})
+
+createTab()
+</script>
+
+</body>
+</html>
